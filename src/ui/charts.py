@@ -131,58 +131,90 @@ def render_gap_matrix(gap_matrix):
         st.info("No gap data available. Run the analysis first.")
         return
 
-    df = pd.DataFrame(gap_matrix)
+    level_map = {2: "✅ Demonstrated", 1: "⚠️ Theoretical", 0: "❌ Missing"}
+    status_colors = {
+        2: ("rgba(16,185,129,0.12)", "#34d399"),
+        1: ("rgba(245,158,11,0.12)", "#fbbf24"),
+        0: ("rgba(239,68,68,0.12)",  "#f87171"),
+    }
 
-    level_map    = {2: "✅ Demonstrated", 1: "⚠️ Theoretical", 0: "❌ Missing"}
-    df["Status"] = df["evidence_level"].map(level_map)
+    # ── Build HTML table ────────────────────────────────────────────────────
+    header = """
+        <tr>
+            <th style="text-align:left;padding:10px 14px;font-size:0.78rem;font-weight:600;
+                       color:#64748b;text-transform:uppercase;letter-spacing:0.04em;
+                       border-bottom:1px solid rgba(255,255,255,0.08);">Skill</th>
+            <th style="text-align:left;padding:10px 14px;font-size:0.78rem;font-weight:600;
+                       color:#64748b;text-transform:uppercase;letter-spacing:0.04em;
+                       border-bottom:1px solid rgba(255,255,255,0.08);">Status</th>
+            <th style="text-align:right;padding:10px 14px;font-size:0.78rem;font-weight:600;
+                       color:#64748b;text-transform:uppercase;letter-spacing:0.04em;
+                       border-bottom:1px solid rgba(255,255,255,0.08);">Market %</th>
+            <th style="text-align:left;padding:10px 14px;font-size:0.78rem;font-weight:600;
+                       color:#64748b;text-transform:uppercase;letter-spacing:0.04em;
+                       border-bottom:1px solid rgba(255,255,255,0.08);">Category</th>
+            <th style="text-align:left;padding:10px 14px;font-size:0.78rem;font-weight:600;
+                       color:#64748b;text-transform:uppercase;letter-spacing:0.04em;
+                       border-bottom:1px solid rgba(255,255,255,0.08);">Evidence</th>
+            <th style="text-align:center;padding:10px 14px;font-size:0.78rem;font-weight:600;
+                       color:#64748b;text-transform:uppercase;letter-spacing:0.04em;
+                       border-bottom:1px solid rgba(255,255,255,0.08);">Priority</th>
+        </tr>
+    """
 
-    display_df = df[[
-        "skill", "Status", "frequency", "category", "justification", "is_high_priority"
-    ]].copy()
+    rows_html = ""
+    for row in gap_matrix:
+        ev      = row.get("evidence_level", 0)
+        status  = level_map.get(ev, "Unknown")
+        bg, clr = status_colors.get(ev, ("transparent", "#94a3b8"))
+        freq    = row.get("frequency", 0)
+        is_hp   = row.get("is_high_priority", False)
+        priority_badge = (
+            '<span style="background:rgba(239,68,68,0.15);color:#f87171;'
+            'padding:2px 8px;border-radius:20px;font-size:0.72rem;font-weight:600;">🚨 High</span>'
+            if is_hp else
+            '<span style="color:#334155;font-size:0.82rem;">—</span>'
+        )
 
-    display_df.rename(columns={
-        "skill":           "Skill",
-        "frequency":       "Market %",
-        "category":        "Category",
-        "justification":   "Evidence",
-        "is_high_priority":"Priority",
-    }, inplace=True)
+        rows_html += f"""
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.04);
+                       transition:background 0.15s ease;"
+                onmouseover="this.style.background='rgba(255,255,255,0.025)';"
+                onmouseout="this.style.background='transparent';">
+                <td style="padding:10px 14px;font-size:0.85rem;font-weight:600;color:#f1f5f9;">
+                    {row.get('skill', '')}</td>
+                <td style="padding:10px 14px;">
+                    <span style="background:{bg};color:{clr};padding:3px 10px;
+                                 border-radius:6px;font-size:0.78rem;font-weight:500;">
+                        {status}
+                    </span>
+                </td>
+                <td style="padding:10px 14px;text-align:right;font-size:0.85rem;
+                           font-weight:600;color:{clr};">{freq}%</td>
+                <td style="padding:10px 14px;font-size:0.82rem;color:#94a3b8;">
+                    {row.get('category', '')}</td>
+                <td style="padding:10px 14px;font-size:0.8rem;color:#64748b;max-width:280px;
+                           overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    {row.get('justification', '')}</td>
+                <td style="padding:10px 14px;text-align:center;">{priority_badge}</td>
+            </tr>
+        """
 
-    display_df["Market %"] = display_df["Market %"].apply(lambda v: f"{v}%")
-    display_df["Priority"] = display_df["Priority"].apply(
-        lambda v: "🚨 High" if v else "—"
-    )
+    table_html = f"""
+        <div style="overflow-x:auto;border-radius:12px;
+                    border:1px solid rgba(255,255,255,0.06);">
+            <table style="width:100%;border-collapse:collapse;
+                         background:rgba(255,255,255,0.015);">
+                <thead>{header}</thead>
+                <tbody>{rows_html}</tbody>
+            </table>
+        </div>
+    """
+    st.markdown(table_html, unsafe_allow_html=True)
 
-    def style_status(val):
-        if "Demonstrated" in str(val):
-            return "background-color:rgba(16,185,129,0.1);color:#34d399;font-weight:500;"
-        elif "Theoretical" in str(val):
-            return "background-color:rgba(245,158,11,0.1);color:#fbbf24;font-weight:500;"
-        elif "Missing" in str(val):
-            return "background-color:rgba(239,68,68,0.1);color:#f87171;font-weight:500;"
-        return ""
-
-    def style_priority(val):
-        if "High" in str(val):
-            return "color:#f87171;font-weight:700;"
-        return "color:#334155;"
-
-    styled = (
-        display_df.style
-        .map(style_status,   subset=["Status"])
-        .map(style_priority, subset=["Priority"])
-        .set_properties(**{
-            "color":            "#cbd5e1",
-            "font-size":        "0.85rem",
-            "background-color": "transparent",
-        })
-    )
-
-    st.dataframe(styled, use_container_width=True, height=480)
-
-    # High-priority cards
-    high_p = df[df["is_high_priority"] == True]
-    if not high_p.empty:
+    # ── High-priority cards ───────────────────────────────────────────────────
+    high_p = [g for g in gap_matrix if g.get("is_high_priority")]
+    if high_p:
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("""
             <h3 style="font-size:1rem;font-weight:700;color:#f1f5f9;margin-bottom:6px;">
@@ -195,9 +227,9 @@ def render_gap_matrix(gap_matrix):
         """, unsafe_allow_html=True)
 
         cols = st.columns(min(len(high_p), 3))
-        for i, (_, row) in enumerate(high_p.iterrows()):
-            status_str = level_map.get(row["evidence_level"], "Unknown")
-            clr = "#f59e0b" if row["evidence_level"] == 1 else "#ef4444"
+        for i, row in enumerate(high_p):
+            status_str = level_map.get(row.get("evidence_level", 0), "Unknown")
+            clr = "#f59e0b" if row.get("evidence_level") == 1 else "#ef4444"
             with cols[i % 3]:
                 st.markdown(f"""
                     <div style="background:rgba(255,255,255,0.025);
@@ -211,7 +243,7 @@ def render_gap_matrix(gap_matrix):
                                     margin-bottom:8px;">
                             <span style="font-size:0.75rem;color:#64748b;">Market demand</span>
                             <span style="font-size:0.82rem;font-weight:700;color:{clr};">
-                                {row['frequency']}%
+                                {row.get('frequency', 0)}%
                             </span>
                         </div>
                         <div style="background:rgba(255,255,255,0.04);border-radius:6px;
