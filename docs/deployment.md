@@ -121,12 +121,12 @@ App is available at `http://localhost:8501`.
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `GEMINI_API_KEY` | ✅ Yes | Google AI Studio API key |
+| `GEMINI_API_KEY` | ✅ Yes | Google AI Studio API key — get one free at [aistudio.google.com](https://aistudio.google.com) |
 | `SUPABASE_URL` | ❌ Optional | Supabase project URL |
 | `SUPABASE_KEY` | ❌ Optional | Supabase anon/public key |
-| `ADMIN_SECRET_KEY` | ❌ Optional | Key to unlock admin panel |
+| `ADMIN_SECRET_KEY` | ❌ Optional | Secret key for admin sidebar access |
 
-The app runs in **demo mode** without Supabase — all analysis features work, but results are not persisted.
+The app runs in **demo mode** without Supabase — all analysis, roadmap, and export features work fully offline.
 
 ---
 
@@ -150,4 +150,5 @@ After deployment, verify the app is working:
 2. Select **Full-Stack Developer** from the role dropdown.
 3. Paste the contents of `src/data/sample_resume.txt` into the text field.
 4. Click **Run Analysis**.
-5. You should see a readiness score between 60–90% and a populated gap matrix within ~30 seconds.
+5. You should see a readiness score and a populated gap matrix within ~30 seconds.
+6. Use the **⬇️ Download Report (CSV)** button in the Results tab to verify the export works.
