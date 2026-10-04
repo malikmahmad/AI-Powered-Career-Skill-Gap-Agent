@@ -302,7 +302,7 @@ def render_sidebar():
             if st.button("🔄  New Analysis", use_container_width=True, type="secondary"):
                 for k in ["analysis_complete","gap_matrix","readiness_score",
                           "market_frequencies","roadmap","messages",
-                          "resume_text","jds","selected_preset"]:
+                          "resume_text","resume_text_staged","jds","selected_preset"]:
                     st.session_state.pop(k, None)
                 st.rerun()
         else:

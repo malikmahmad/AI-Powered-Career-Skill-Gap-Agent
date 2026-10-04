@@ -1,12 +1,14 @@
 [theme]
 primaryColor            = "#6366f1"
-backgroundColor         = "#0a0f1e"
-secondaryBackgroundColor = "#0d1424"
+backgroundColor         = "#070b14"
+secondaryBackgroundColor = "#0c1220"
 textColor               = "#f1f5f9"
-font                    = "sans serif"
 
 [server]
 headless = true
 
 [browser]
 gatherUsageStats = false
+
+[runner]
+fastReruns = true

@@ -145,13 +145,11 @@ skillgap-ai/
     ├── services/
     │   ├── gemini_service.py  # Gemini API: candidate + market skill extraction
     │   ├── gap_engine.py      # Mathematical gap analysis + readiness score
-    │   ├── roadmap_service.py # AI roadmap generation + career coach chatbot
-    │   └── github_service.py  # GitHub public API portfolio fetcher
+    │   └── roadmap_service.py # AI roadmap generation + career coach chatbot
     │
     └── ui/
         ├── dashboard.py       # Main dashboard (4 tabs)
-        ├── charts.py          # Plotly gauge, radar, gap matrix table
-        └── admin_dashboard.py # Admin: telemetry + dataset editor
+        └── charts.py          # Plotly gauge, radar, gap matrix table
 ```
 
 ---

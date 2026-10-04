@@ -1,9 +1,20 @@
-import google.generativeai as genai
 import json
 import os
 import streamlit as st
+from google import genai
+from google.genai import types
 
-def clean_json_response(text):
+
+def _get_client():
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        st.error("Gemini API Key missing — add GEMINI_API_KEY to your .env file.")
+        return None
+    return genai.Client(api_key=api_key)
+
+
+def _clean_json(text: str):
+    """Strip markdown fences from Gemini responses before json.loads."""
     text = text.strip()
     if text.startswith("```json"):
         text = text[7:]
@@ -13,93 +24,102 @@ def clean_json_response(text):
         text = text[:-3]
     return json.loads(text.strip())
 
-def get_gemini_client():
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        st.error("Gemini API Key missing in environment")
-        return None
-    genai.configure(api_key=api_key)
-    # Using flash model for fast structured output
-    # By specifying response_mime_type, we force strict JSON
-    return genai.GenerativeModel('gemini-3.5-flash-lite', generation_config={"response_mime_type": "application/json"})
 
-def extract_candidate_skills(resume_text):
+_MODEL = "gemini-2.0-flash"   # fast, capable, REST-only (no grpc)
+
+
+def extract_candidate_skills(resume_text: str) -> list:
     """
-    Extracts and normalizes skills from the resume, assigning an evidence level.
-    Returns a list of structured skill dictionaries.
+    Uses Gemini to extract and normalise all technical skills from a resume.
+    Assigns an evidence level: 2 = Demonstrated, 1 = Theoretical.
+    Returns a list of skill dicts.
     """
-    model = get_gemini_client()
-    if not model:
+    client = _get_client()
+    if not client:
         return []
-    
-    prompt = f"""
-    You are an expert technical recruiter and skill gap analyst.
-    Analyze the following resume and extract all technical skills.
-    Normalize the skills (e.g. Postgres -> PostgreSQL, React.js -> React).
-    Categorize into: 'Core Foundations', 'Languages & Frameworks', 'Tools & DevOps'.
-    For each skill, determine its evidence level:
-    - 2 (Demonstrated): Backed by project descriptions, metrics, or work experience.
-    - 1 (Theoretical): Present only in a bulleted skills list or coursework with no proof.
-    
-    Output strictly as JSON in this format:
+
+    # Truncate to avoid hitting context limits on very long resumes
+    truncated = resume_text[:15000]
+
+    prompt = f"""You are an expert technical recruiter and skill gap analyst.
+Analyse the following resume and extract all technical skills.
+Normalise skill names (e.g. Postgres -> PostgreSQL, React.js -> React).
+Categorise each skill into one of: 'Core Foundations', 'Languages & Frameworks', 'Tools & DevOps'.
+Assign an evidence level:
+  - 2 (Demonstrated): Backed by project descriptions, metrics, or work experience.
+  - 1 (Theoretical): Listed only in a skills section with no supporting proof.
+
+Return ONLY valid JSON in this exact format — no markdown, no explanation:
+{{
+  "skills": [
     {{
-       "skills": [
-          {{
-              "name": "Skill Name",
-              "category": "Category",
-              "evidence_level": 1 or 2,
-              "justification": "Short reason for the evidence level"
-          }}
-       ]
+      "name": "Skill Name",
+      "category": "Category",
+      "evidence_level": 1,
+      "justification": "Short reason"
     }}
-    
-    Resume Text:
-    {resume_text}
-    """
-    
+  ]
+}}
+
+Resume:
+{truncated}"""
+
     try:
-        response = model.generate_content(prompt)
-        result = clean_json_response(response.text)
+        response = client.models.generate_content(
+            model=_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                temperature=0.1,
+            ),
+        )
+        result = _clean_json(response.text)
         return result.get("skills", [])
     except Exception as e:
-        st.error(f"Error extracting candidate skills: {e}")
+        st.error(f"Skill extraction failed: {e}")
         return []
 
-def extract_market_skills(jd_texts):
+
+def extract_market_skills(jd_texts: list) -> list:
     """
-    Extracts and normalizes required skills from a list of job descriptions.
-    Returns a flat list of normalized skill names per JD, or aggregated.
+    Uses Gemini to extract required/preferred skills from a list of job descriptions.
+    Returns per-JD skill lists so frequency can be calculated.
     """
-    model = get_gemini_client()
-    if not model:
+    client = _get_client()
+    if not client:
         return []
 
-    combined_jds = "\n\n--- NEXT JD ---\n\n".join(jd_texts)
-    
-    prompt = f"""
-    You are an expert technical recruiter and talent market analyst.
-    Analyze the following job descriptions and extract all REQUIRED and PREFERRED technical skills.
-    Normalize the skills to standard names (e.g. Postgres -> PostgreSQL, React.js -> React).
-    Maintain the mapping of skills to each job description so we can count frequency.
-    
-    Output strictly as JSON in this format:
+    combined = "\n\n--- NEXT JD ---\n\n".join(jd_texts)
+
+    prompt = f"""You are an expert technical recruiter and talent market analyst.
+Analyse the following job descriptions and extract all REQUIRED and PREFERRED technical skills.
+Normalise skill names to standard forms (e.g. Postgres -> PostgreSQL, React.js -> React).
+Keep skills mapped per job description so frequency can be calculated.
+
+Return ONLY valid JSON in this exact format — no markdown, no explanation:
+{{
+  "jd_analysis": [
     {{
-       "jd_analysis": [
-          {{
-              "jd_index": 1,
-              "skills": ["React", "Node.js", "PostgreSQL"]
-          }}
-       ]
+      "jd_index": 1,
+      "skills": ["React", "Node.js", "PostgreSQL"]
     }}
-    
-    Job Descriptions:
-    {combined_jds}
-    """
-    
+  ]
+}}
+
+Job Descriptions:
+{combined}"""
+
     try:
-        response = model.generate_content(prompt)
-        result = clean_json_response(response.text)
+        response = client.models.generate_content(
+            model=_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                temperature=0.1,
+            ),
+        )
+        result = _clean_json(response.text)
         return result.get("jd_analysis", [])
     except Exception as e:
-        st.error(f"Error extracting market skills: {e}")
+        st.error(f"Market skill extraction failed: {e}")
         return []

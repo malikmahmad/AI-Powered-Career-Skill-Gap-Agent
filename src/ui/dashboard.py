@@ -12,6 +12,7 @@ from src.db.supabase_client import save_analysis
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
+@st.cache_data(ttl=300)
 def load_presets():
     preset_path = os.path.join(os.path.dirname(__file__), "..", "data", "presets.json")
     try:
@@ -217,8 +218,6 @@ def render_dashboard():
                 label_visibility="collapsed",
             )
 
-            resume_text_buffer = ""
-
             if resume_mode == "📄  Upload PDF":
                 uploaded = st.file_uploader(
                     "Resume PDF", type=["pdf"], label_visibility="collapsed"
@@ -227,9 +226,11 @@ def render_dashboard():
                     import pypdf
                     try:
                         reader = pypdf.PdfReader(uploaded)
-                        resume_text_buffer = "\n".join(
+                        extracted = "\n".join(
                             p.extract_text() or "" for p in reader.pages
                         ).strip()
+                        # Persist immediately to session state — survives reruns
+                        st.session_state["resume_text_staged"] = extracted
                         st.markdown(f"""
                             <div style="background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.2);
                                         border-radius:10px;padding:12px 16px;margin-top:10px;
@@ -240,37 +241,52 @@ def render_dashboard():
                                         PDF extracted successfully
                                     </div>
                                     <div style="font-size:0.75rem;color:#64748b;margin-top:1px;">
-                                        {len(reader.pages)} page{"s" if len(reader.pages)!=1 else ""} · {len(resume_text_buffer):,} characters
+                                        {len(reader.pages)} page{"s" if len(reader.pages)!=1 else ""} · {len(extracted):,} characters
                                     </div>
                                 </div>
                             </div>
                         """, unsafe_allow_html=True)
                         with st.expander("Preview extracted text"):
-                            st.text(resume_text_buffer[:2000] +
-                                    ("…" if len(resume_text_buffer) > 2000 else ""))
+                            st.text(extracted[:2000] + ("…" if len(extracted) > 2000 else ""))
                     except Exception as e:
                         st.error(f"Could not read PDF: {e}")
+                elif st.session_state.get("resume_text_staged"):
+                    # File was uploaded in a previous run — show persisted state
+                    chars = len(st.session_state["resume_text_staged"])
+                    st.markdown(f"""
+                        <div style="background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.15);
+                                    border-radius:10px;padding:10px 16px;margin-top:10px;
+                                    font-size:0.8rem;color:#64748b;">
+                            ✓ Resume loaded · {chars:,} characters · re-upload to change
+                        </div>
+                    """, unsafe_allow_html=True)
             else:
-                resume_text_buffer = st.text_area(
+                # Clear any previously staged PDF text when switching to paste mode
+                if st.session_state.get("resume_text_staged"):
+                    st.session_state.pop("resume_text_staged", None)
+                paste_text = st.text_area(
                     "Resume text",
                     height=280,
                     placeholder="Paste the full content of your resume here…",
                     label_visibility="collapsed",
                 )
-                if resume_text_buffer.strip():
-                    wc = len(resume_text_buffer.split())
+                if paste_text.strip():
+                    st.session_state["resume_text_staged"] = paste_text.strip()
+                    wc = len(paste_text.split())
                     st.markdown(f"""
                         <div style="font-size:0.75rem;color:#475569;margin-top:4px;text-align:right;">
                             ~{wc:,} words
                         </div>
                     """, unsafe_allow_html=True)
+                else:
+                    st.session_state.pop("resume_text_staged", None)
 
         # ── Run Section ───────────────────────────────────────────────────────
         st.markdown("<br>", unsafe_allow_html=True)
         st.divider()
 
         jds_ready    = bool(st.session_state.get("jds"))
-        resume_ready = bool(resume_text_buffer and resume_text_buffer.strip())
+        resume_ready = bool(st.session_state.get("resume_text_staged", "").strip())
 
         # Status pills
         st.markdown("""
@@ -280,7 +296,8 @@ def render_dashboard():
         c1, c2, spacer = st.columns([1, 1, 2])
         with c1:
             if jds_ready:
-                role_name = next((p["name"] for p in load_presets()
+                presets_list = load_presets()
+                role_name = next((p["name"] for p in presets_list
                                   if p["id"] == st.session_state.get("selected_preset")), "Custom JD")
                 st.success(f"✓ {role_name}")
             else:
@@ -297,7 +314,7 @@ def render_dashboard():
             run_disabled = not (jds_ready and resume_ready)
             if st.button("🚀  Run Analysis", type="primary",
                          use_container_width=True, disabled=run_disabled):
-                st.session_state["resume_text"] = resume_text_buffer
+                st.session_state["resume_text"] = st.session_state["resume_text_staged"]
                 process_analysis()
                 st.success("✅ Analysis complete! Switch to the **Results** tab.")
             if run_disabled:

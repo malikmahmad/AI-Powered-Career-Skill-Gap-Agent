@@ -49,7 +49,7 @@ def analyze_gaps(candidate_skills, market_frequencies):
             "justification": cand_skill.get("justification", "Missing from profile") if cand_skill else "Missing from profile"
         })
         
-    readiness_score = int((earned_points / total_market_points * 100)) if total_market_points > 0 else 0
+    readiness_score = round((earned_points / total_market_points * 100)) if total_market_points > 0 else 0
     
     # Sort matrix by frequency descending
     matrix = sorted(matrix, key=lambda x: x["frequency"], reverse=True)
