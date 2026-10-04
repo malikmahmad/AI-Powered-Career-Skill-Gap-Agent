@@ -133,29 +133,23 @@ def render_gap_matrix(gap_matrix):
 
     level_map = {2: "✅ Demonstrated", 1: "⚠️ Theoretical", 0: "❌ Missing"}
 
-    df = pd.DataFrame(gap_matrix)
-    df["Status"] = df["evidence_level"].map(level_map)
-    df["Priority"] = df["is_high_priority"].apply(lambda v: "🚨 High" if v else "—")
+    # Build a clean DataFrame for st.table()
+    rows = []
+    for g in gap_matrix:
+        ev = g.get("evidence_level", 0)
+        rows.append({
+            "Skill":     g.get("skill", ""),
+            "Status":    level_map.get(ev, "Unknown"),
+            "Market %":  f"{g.get('frequency', 0)}%",
+            "Category":  g.get("category", ""),
+            "Evidence":  g.get("justification", "")[:80],
+            "Priority":  "🚨 High" if g.get("is_high_priority") else "—",
+        })
 
-    display_df = df[["skill", "Status", "frequency", "category", "justification", "Priority"]].copy()
-    display_df.columns = ["Skill", "Status", "Market %", "Category", "Evidence", "Priority"]
-    display_df["Market %"] = display_df["Market %"].apply(lambda v: f"{v}%")
+    df = pd.DataFrame(rows)
 
-    # Plain dataframe — no Styler (Styler causes React error #185 on Streamlit Cloud)
-    st.dataframe(
-        display_df,
-        use_container_width=True,
-        height=min(400, 45 * len(display_df) + 40),
-        hide_index=True,
-        column_config={
-            "Skill":    st.column_config.TextColumn("Skill", width="medium"),
-            "Status":   st.column_config.TextColumn("Status", width="small"),
-            "Market %": st.column_config.TextColumn("Market %", width="small"),
-            "Category": st.column_config.TextColumn("Category", width="medium"),
-            "Evidence": st.column_config.TextColumn("Evidence", width="large"),
-            "Priority": st.column_config.TextColumn("Priority", width="small"),
-        },
-    )
+    # st.table is the most stable renderer — static HTML, no React component
+    st.table(df)
 
     # ── High-priority cards ───────────────────────────────────────────────────
     high_p = [g for g in gap_matrix if g.get("is_high_priority")]
