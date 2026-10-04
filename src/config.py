@@ -5,7 +5,7 @@ Import from this module instead of scattering magic numbers across the codebase.
 """
 
 # ── AI Model ──────────────────────────────────────────────────────────────────
-GEMINI_MODEL = "gemini-2.0-flash"
+GEMINI_MODEL = "gemini-3.5-flash-lite"
 GEMINI_TEMPERATURE_EXTRACTION = 0.1   # low temp → deterministic JSON output
 GEMINI_TEMPERATURE_ROADMAP    = 0.4   # slightly creative for roadmap prose
 GEMINI_TEMPERATURE_CHAT       = 0.5   # conversational but grounded

@@ -12,7 +12,7 @@ SkillGap AI compares your resume against real job market demands using Google Ge
 
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.36-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)](https://streamlit.io)
-[![Gemini](https://img.shields.io/badge/Google_Gemini-2.0_Flash-4285F4?style=flat-square&logo=google&logoColor=white)](https://ai.google.dev)
+[![Gemini](https://img.shields.io/badge/Google_Gemini-3.5_Flash_Lite-4285F4?style=flat-square&logo=google&logoColor=white)](https://ai.google.dev)
 [![Supabase](https://img.shields.io/badge/Supabase-DB-3FCF8E?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com)
 [![Plotly](https://img.shields.io/badge/Plotly-Charts-3F4F75?style=flat-square&logo=plotly&logoColor=white)](https://plotly.com)
 [![Tests](https://img.shields.io/badge/Tests-38_passing-22c55e?style=flat-square&logo=pytest&logoColor=white)](#testing)
@@ -119,7 +119,7 @@ Gap Engine → Frequency Calculation + Gap Comparison
 | Layer | Technology | Version | Purpose |
 |-------|-----------|---------|---------|
 | Frontend | Streamlit | 1.36 | Interactive dashboard, custom CSS design system |
-| AI / LLM | Google Gemini 2.0 Flash | via `google-genai` | Skill extraction, roadmap, chatbot |
+| AI / LLM | Google Gemini 3.5 Flash Lite | via `google-genai` | Skill extraction, roadmap, chatbot |
 | Database | Supabase | 2.5 | Optional profile persistence (JSONB gap matrix) |
 | Charts | Plotly | 5.22 | Gauge chart, radar chart |
 | Data | Pandas | 2.2 | DataFrame manipulation, styled gap table |

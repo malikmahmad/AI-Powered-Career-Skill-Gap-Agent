@@ -323,7 +323,7 @@ def render_sidebar():
                 Powered by
             </div>
             <div style="display:flex;flex-direction:column;gap:6px;">
-                <div style="font-size:0.78rem;color:#475569;">🤖 Google Gemini 3.5</div>
+                <div style="font-size:0.78rem;color:#475569;">🤖 Google Gemini 3.5 Flash Lite</div>
                 <div style="font-size:0.78rem;color:#475569;">🗄️ Supabase</div>
                 <div style="font-size:0.78rem;color:#475569;">📊 Plotly</div>
             </div>
