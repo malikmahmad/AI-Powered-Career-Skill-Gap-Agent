@@ -132,85 +132,30 @@ def render_gap_matrix(gap_matrix):
         return
 
     level_map = {2: "✅ Demonstrated", 1: "⚠️ Theoretical", 0: "❌ Missing"}
-    status_colors = {
-        2: ("rgba(16,185,129,0.12)", "#34d399"),
-        1: ("rgba(245,158,11,0.12)", "#fbbf24"),
-        0: ("rgba(239,68,68,0.12)",  "#f87171"),
-    }
 
-    # ── Build HTML table ────────────────────────────────────────────────────
-    header = """
-        <tr>
-            <th style="text-align:left;padding:10px 14px;font-size:0.78rem;font-weight:600;
-                       color:#64748b;text-transform:uppercase;letter-spacing:0.04em;
-                       border-bottom:1px solid rgba(255,255,255,0.08);">Skill</th>
-            <th style="text-align:left;padding:10px 14px;font-size:0.78rem;font-weight:600;
-                       color:#64748b;text-transform:uppercase;letter-spacing:0.04em;
-                       border-bottom:1px solid rgba(255,255,255,0.08);">Status</th>
-            <th style="text-align:right;padding:10px 14px;font-size:0.78rem;font-weight:600;
-                       color:#64748b;text-transform:uppercase;letter-spacing:0.04em;
-                       border-bottom:1px solid rgba(255,255,255,0.08);">Market %</th>
-            <th style="text-align:left;padding:10px 14px;font-size:0.78rem;font-weight:600;
-                       color:#64748b;text-transform:uppercase;letter-spacing:0.04em;
-                       border-bottom:1px solid rgba(255,255,255,0.08);">Category</th>
-            <th style="text-align:left;padding:10px 14px;font-size:0.78rem;font-weight:600;
-                       color:#64748b;text-transform:uppercase;letter-spacing:0.04em;
-                       border-bottom:1px solid rgba(255,255,255,0.08);">Evidence</th>
-            <th style="text-align:center;padding:10px 14px;font-size:0.78rem;font-weight:600;
-                       color:#64748b;text-transform:uppercase;letter-spacing:0.04em;
-                       border-bottom:1px solid rgba(255,255,255,0.08);">Priority</th>
-        </tr>
-    """
+    df = pd.DataFrame(gap_matrix)
+    df["Status"] = df["evidence_level"].map(level_map)
+    df["Priority"] = df["is_high_priority"].apply(lambda v: "🚨 High" if v else "—")
 
-    rows_html = ""
-    for row in gap_matrix:
-        ev      = row.get("evidence_level", 0)
-        status  = level_map.get(ev, "Unknown")
-        bg, clr = status_colors.get(ev, ("transparent", "#94a3b8"))
-        freq    = row.get("frequency", 0)
-        is_hp   = row.get("is_high_priority", False)
-        priority_badge = (
-            '<span style="background:rgba(239,68,68,0.15);color:#f87171;'
-            'padding:2px 8px;border-radius:20px;font-size:0.72rem;font-weight:600;">🚨 High</span>'
-            if is_hp else
-            '<span style="color:#334155;font-size:0.82rem;">—</span>'
-        )
+    display_df = df[["skill", "Status", "frequency", "category", "justification", "Priority"]].copy()
+    display_df.columns = ["Skill", "Status", "Market %", "Category", "Evidence", "Priority"]
+    display_df["Market %"] = display_df["Market %"].apply(lambda v: f"{v}%")
 
-        rows_html += f"""
-            <tr style="border-bottom:1px solid rgba(255,255,255,0.04);
-                       transition:background 0.15s ease;"
-                onmouseover="this.style.background='rgba(255,255,255,0.025)';"
-                onmouseout="this.style.background='transparent';">
-                <td style="padding:10px 14px;font-size:0.85rem;font-weight:600;color:#f1f5f9;">
-                    {row.get('skill', '')}</td>
-                <td style="padding:10px 14px;">
-                    <span style="background:{bg};color:{clr};padding:3px 10px;
-                                 border-radius:6px;font-size:0.78rem;font-weight:500;">
-                        {status}
-                    </span>
-                </td>
-                <td style="padding:10px 14px;text-align:right;font-size:0.85rem;
-                           font-weight:600;color:{clr};">{freq}%</td>
-                <td style="padding:10px 14px;font-size:0.82rem;color:#94a3b8;">
-                    {row.get('category', '')}</td>
-                <td style="padding:10px 14px;font-size:0.8rem;color:#64748b;max-width:280px;
-                           overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                    {row.get('justification', '')}</td>
-                <td style="padding:10px 14px;text-align:center;">{priority_badge}</td>
-            </tr>
-        """
-
-    table_html = f"""
-        <div style="overflow-x:auto;border-radius:12px;
-                    border:1px solid rgba(255,255,255,0.06);">
-            <table style="width:100%;border-collapse:collapse;
-                         background:rgba(255,255,255,0.015);">
-                <thead>{header}</thead>
-                <tbody>{rows_html}</tbody>
-            </table>
-        </div>
-    """
-    st.markdown(table_html, unsafe_allow_html=True)
+    # Plain dataframe — no Styler (Styler causes React error #185 on Streamlit Cloud)
+    st.dataframe(
+        display_df,
+        use_container_width=True,
+        height=min(400, 45 * len(display_df) + 40),
+        hide_index=True,
+        column_config={
+            "Skill":    st.column_config.TextColumn("Skill", width="medium"),
+            "Status":   st.column_config.TextColumn("Status", width="small"),
+            "Market %": st.column_config.TextColumn("Market %", width="small"),
+            "Category": st.column_config.TextColumn("Category", width="medium"),
+            "Evidence": st.column_config.TextColumn("Evidence", width="large"),
+            "Priority": st.column_config.TextColumn("Priority", width="small"),
+        },
+    )
 
     # ── High-priority cards ───────────────────────────────────────────────────
     high_p = [g for g in gap_matrix if g.get("is_high_priority")]
@@ -235,8 +180,7 @@ def render_gap_matrix(gap_matrix):
                     <div style="background:rgba(255,255,255,0.025);
                                 border:1px solid rgba(255,255,255,0.07);
                                 border-top:2px solid {clr};
-                                border-radius:12px;padding:16px 18px;margin-bottom:10px;
-                                transition:all 0.2s ease;">
+                                border-radius:12px;padding:16px 18px;margin-bottom:10px;">
                         <div style="font-weight:700;color:#f1f5f9;font-size:0.9rem;
                                     margin-bottom:6px;">{row['skill']}</div>
                         <div style="display:flex;align-items:center;justify-content:space-between;
