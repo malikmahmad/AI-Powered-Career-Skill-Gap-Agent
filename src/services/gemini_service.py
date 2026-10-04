@@ -3,6 +3,11 @@ import os
 import streamlit as st
 from google import genai
 from google.genai import types
+from src.config import (
+    GEMINI_MODEL,
+    GEMINI_TEMPERATURE_EXTRACTION,
+    RESUME_MAX_CHARS,
+)
 
 
 def _get_client():
@@ -25,7 +30,7 @@ def _clean_json(text: str):
     return json.loads(text.strip())
 
 
-_MODEL = "gemini-2.0-flash"   # fast, capable, REST-only (no grpc)
+_MODEL = GEMINI_MODEL
 
 
 def extract_candidate_skills(resume_text: str) -> list:
@@ -38,8 +43,7 @@ def extract_candidate_skills(resume_text: str) -> list:
     if not client:
         return []
 
-    # Truncate to avoid hitting context limits on very long resumes
-    truncated = resume_text[:15000]
+    truncated = resume_text[:RESUME_MAX_CHARS]
 
     prompt = f"""You are an expert technical recruiter and skill gap analyst.
 Analyse the following resume and extract all technical skills.
@@ -70,7 +74,7 @@ Resume:
             contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
-                temperature=0.1,
+                temperature=GEMINI_TEMPERATURE_EXTRACTION,
             ),
         )
         result = _clean_json(response.text)
@@ -115,7 +119,7 @@ Job Descriptions:
             contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
-                temperature=0.1,
+                temperature=GEMINI_TEMPERATURE_EXTRACTION,
             ),
         )
         result = _clean_json(response.text)

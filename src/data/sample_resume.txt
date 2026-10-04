@@ -1,0 +1,74 @@
+SARAH CHEN
+Full-Stack Software Engineer
+sarah.chen@email.com | linkedin.com/in/sarahchen | github.com/sarahchen
+
+─────────────────────────────────────────────────────
+SUMMARY
+─────────────────────────────────────────────────────
+Full-Stack Software Engineer with 3 years of experience building scalable web
+applications. Specialised in React frontends and Node.js/Python backends, with
+hands-on production experience deploying to AWS. Passionate about clean code,
+system performance, and developer tooling.
+
+─────────────────────────────────────────────────────
+EXPERIENCE
+─────────────────────────────────────────────────────
+
+Software Engineer — Nexus Tech Solutions (Jan 2023 – Present)
+• Built and shipped 4 major product features using React 18, TypeScript, and
+  Tailwind CSS, reducing user onboarding time by 35%.
+• Designed and implemented a REST API using Node.js (Express) serving 50,000+
+  daily active users with <120ms p99 latency.
+• Migrated a legacy PostgreSQL schema to support multi-tenancy, improving query
+  performance by 60% through proper indexing and query optimisation.
+• Set up CI/CD pipelines using GitHub Actions, cutting deployment time from 45
+  minutes to under 8 minutes.
+• Containerised 3 microservices using Docker and deployed to AWS EC2 with an
+  Application Load Balancer.
+
+Junior Developer — ByteWave Studio (Jul 2021 – Dec 2022)
+• Contributed to a React + Django SPA used by 8,000 monthly active users.
+• Wrote unit and integration tests with Jest and pytest, achieving 78% code
+  coverage across the frontend.
+• Integrated Stripe payment API and SendGrid for transactional emails.
+• Used Git with feature branch workflows for all development.
+
+─────────────────────────────────────────────────────
+PROJECTS
+─────────────────────────────────────────────────────
+
+DevBoard — Real-Time Developer Dashboard (github.com/sarahchen/devboard)
+• React + WebSocket dashboard aggregating GitHub, Jira, and CI/CD status.
+• Backend: Node.js + Redis for real-time pub/sub, deployed on AWS Lambda.
+• 200+ GitHub stars. Used by 3 small engineering teams.
+
+QueryCraft — AI-Powered SQL Generator (github.com/sarahchen/querycraft)
+• Python (FastAPI) + OpenAI API that converts natural language to SQL.
+• PostgreSQL backend with query validation and execution sandbox.
+• 150 weekly active users since launch.
+
+─────────────────────────────────────────────────────
+EDUCATION
+─────────────────────────────────────────────────────
+
+B.Sc. Computer Science — University of Manchester (2018–2021)
+• Final Year Project: Distributed task queue system using Python and RabbitMQ.
+• Relevant coursework: Algorithms, Databases, Operating Systems, Networks.
+
+─────────────────────────────────────────────────────
+TECHNICAL SKILLS
+─────────────────────────────────────────────────────
+
+Languages:     Python, JavaScript, TypeScript, SQL
+Frontend:      React, Next.js, Tailwind CSS, HTML/CSS
+Backend:       Node.js, Express, FastAPI, Django
+Databases:     PostgreSQL, Redis, MongoDB (basic)
+Cloud & DevOps: AWS (EC2, S3, Lambda, RDS), Docker, GitHub Actions
+Testing:       Jest, pytest, React Testing Library
+Tools:         Git, Jira, Figma (basic), VS Code
+
+─────────────────────────────────────────────────────
+CERTIFICATIONS
+─────────────────────────────────────────────────────
+• AWS Certified Cloud Practitioner (2023)
+• Google Professional Cloud Developer (In Progress)

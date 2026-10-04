@@ -7,6 +7,7 @@ from src.services.gemini_service import extract_candidate_skills, extract_market
 from src.services.gap_engine import calculate_market_frequencies, analyze_gaps
 from src.ui.charts import render_candidate_radar_chart, render_readiness_gauge, render_gap_matrix
 from src.services.roadmap_service import generate_roadmap, get_chat_response
+from src.services.export_service import gap_matrix_to_csv
 from src.db.supabase_client import save_analysis
 
 
@@ -406,6 +407,18 @@ def render_dashboard():
             """, unsafe_allow_html=True)
             render_candidate_radar_chart(gap_matrix)
 
+            # ── Export ───────────────────────────────────────────────────────
+            st.markdown("<br>", unsafe_allow_html=True)
+            csv_data = gap_matrix_to_csv(gap_matrix)
+            role_name_safe = st.session_state.get("selected_preset", "analysis").replace(" ", "_")
+            st.download_button(
+                label="⬇️  Download Full Report (CSV)",
+                data=csv_data,
+                file_name=f"skillgap_{role_name_safe}.csv",
+                mime="text/csv",
+                use_container_width=False,
+            )
+
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # TAB 3 — Skill Gaps
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -423,6 +436,18 @@ def render_dashboard():
                 </p>
             """, unsafe_allow_html=True)
             render_gap_matrix(st.session_state.get("gap_matrix", []))
+
+            # ── Export ───────────────────────────────────────────────────────
+            st.markdown("<br>", unsafe_allow_html=True)
+            csv_data = gap_matrix_to_csv(st.session_state.get("gap_matrix", []))
+            role_name_safe = st.session_state.get("selected_preset", "analysis").replace(" ", "_")
+            st.download_button(
+                label="⬇️  Export Gap Matrix (CSV)",
+                data=csv_data,
+                file_name=f"skillgap_{role_name_safe}.csv",
+                mime="text/csv",
+                use_container_width=False,
+            )
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # TAB 4 — Roadmap & Chat

@@ -2,9 +2,17 @@ import os
 import streamlit as st
 from google import genai
 from google.genai import types
+from src.config import (
+    GEMINI_MODEL,
+    GEMINI_TEMPERATURE_ROADMAP,
+    GEMINI_TEMPERATURE_CHAT,
+    CHAT_HISTORY_WINDOW,
+    ROADMAP_MIN_STEPS,
+    ROADMAP_MAX_STEPS,
+)
 
-_MODEL = "gemini-2.0-flash"
-_CHAT_WINDOW = 10   # keep last N messages to prevent unbounded prompt growth
+_MODEL = GEMINI_MODEL
+_CHAT_WINDOW = CHAT_HISTORY_WINDOW
 
 
 def _get_client():
@@ -29,7 +37,7 @@ def generate_roadmap(gap_matrix: list) -> str:
     if not high_priority and not theoretical:
         return "✅ No critical gaps found — your profile is a strong match for this role!"
 
-    n_steps = min(max(len(high_priority), 2), 5)
+    n_steps = min(max(len(high_priority), ROADMAP_MIN_STEPS), ROADMAP_MAX_STEPS)
 
     gaps_summary  = f"High-Priority Gaps (≥50% market demand, not yet demonstrated): {[g['skill'] for g in high_priority]}\n"
     gaps_summary += f"Theoretical Skills (need project proof): {[g['skill'] for g in theoretical]}"
@@ -51,7 +59,7 @@ Rules:
         response = client.models.generate_content(
             model=_MODEL,
             contents=prompt,
-            config=types.GenerateContentConfig(temperature=0.4),
+            config=types.GenerateContentConfig(temperature=GEMINI_TEMPERATURE_ROADMAP),
         )
         return response.text
     except Exception as e:
@@ -101,7 +109,7 @@ Guidelines:
         response = client.models.generate_content(
             model=_MODEL,
             contents=full_prompt,
-            config=types.GenerateContentConfig(temperature=0.5),
+            config=types.GenerateContentConfig(temperature=GEMINI_TEMPERATURE_CHAT),
         )
         return response.text
     except Exception as e:

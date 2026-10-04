@@ -1,3 +1,6 @@
+from src.config import HIGH_PRIORITY_THRESHOLD, EVIDENCE_DEMONSTRATED
+
+
 def calculate_market_frequencies(jd_analyses):
     """
     Given a list of jd analysis dicts, calculate the appearance frequency of each skill.
@@ -33,8 +36,8 @@ def analyze_gaps(candidate_skills, market_frequencies):
         
         evidence_level = cand_skill["evidence_level"] if cand_skill else 0
         
-        # Priority logic: High if frequency >= 50% and evidence < 2
-        is_high_priority = (freq >= 50.0) and (evidence_level < 2)
+        # Priority logic: High if frequency >= threshold AND evidence < Demonstrated
+        is_high_priority = (freq >= HIGH_PRIORITY_THRESHOLD) and (evidence_level < EVIDENCE_DEMONSTRATED)
         
         # Readiness Calculation Logic
         total_market_points += freq * 2  # Max evidence level is 2
